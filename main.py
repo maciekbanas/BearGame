@@ -1,4 +1,5 @@
 import pygame
+import random
 
 pygame.init()
 
@@ -32,7 +33,8 @@ def load_gif_frames(filename):
 bear_idle_frames = load_gif_frames("bear_idle.gif")
 bear_walk_right = load_gif_frames("bear_walk_right.gif")
 bear_walk_left = load_gif_frames("bear_walk_left.gif")
-bear_attack = load_gif_frames("bear_attack.gif")
+bear_attack_1 = load_gif_frames("bear_attack_1.gif")
+bear_attack_2 = load_gif_frames("bear_attack_2.gif")
 bear_jump = load_gif_frames("bear_jump.gif")
 
 # Pozycja
@@ -50,6 +52,9 @@ jump_speed = 8
 jump_start_y = bear_y
 
 jump_direction = 0  # -1: w lewo, 1: w prawo, 0: pionowo
+current_attack_frames = []
+attacking = False
+attack_key_pressed = False
 
 thing_frames = load_gif_frames("thing.gif")
 thing_x = 400
@@ -65,7 +70,13 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_a:
+                attack_key_pressed = True
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_a:
+                attacking = False
+                attack_key_pressed = False
     keys = pygame.key.get_pressed()
     moving_left = keys[pygame.K_LEFT]
     moving_right = keys[pygame.K_RIGHT]
@@ -114,12 +125,20 @@ while running:
             bear_frame_index = (bear_frame_index + 1) % len(bear_walk_left)
             bear_frame_timer = 0
         current_frame = bear_walk_left[bear_frame_index]
-    elif attack:
+    elif attack_key_pressed:
+        if not attacking:
+            attacking = True
+            current_attack_frames = random.choice([bear_attack_1, bear_attack_2])
+            bear_frame_index = 0
+            bear_frame_timer = 0
+
         bear_frame_timer += dt
         if bear_frame_timer >= bear_frame_delay:
-            bear_frame_index = (bear_frame_index + 1) % len(bear_jump)
+            bear_frame_index = (bear_frame_index + 1) % len(current_attack_frames)
             bear_frame_timer = 0
         current_frame = bear_attack[bear_frame_index]
+
+        current_frame = current_attack_frames[bear_frame_index]
     elif is_jumping:
         if jump_phase == "up":
             bear_y -= jump_speed
